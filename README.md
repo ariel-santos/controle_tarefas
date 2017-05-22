@@ -1,7 +1,7 @@
 # controle_tarefas (Falarme)
 
-Sistema para controle de Tarefas baseado em Kanban
-
-Palavras Importantes:
-Ocorrencia  = Tarefa
-Area        = Projeto
+Sistema para controle de Tarefas baseado em Kanban<br />
+<br />
+Palavras Importantes: <br />
+Ocorrencia  = Tarefa <br />
+Area        = Projeto <br />
