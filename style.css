@@ -1,0 +1,13 @@
+/*
+    Theme Name:   Falarme  
+    Description:  Falarme  
+    
+    Text Domain:  falarme
+*/
+
+.no-margin{ margin: 0px !important;}
+.no-padding{ padding: 0px !important;}
+.pointer{cursor: pointer;}
+.bordered{border: 1px solid silver; }
+
+#container-usuario{ font-size: 15pt;}
