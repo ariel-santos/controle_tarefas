@@ -126,10 +126,13 @@
                 jQuery.post(url, {id: id}, function(data){
 //                    console.log(data);
                     jQuery("#modal_tarefa_detalhes label").addClass("active");
-                    jQuery("#modal_tarefa_detalhes input#descricao").val(data.Descricao);
-                    jQuery("#modal_tarefa_detalhes textarea#descricao_cliente").val(data.DescricaoCliente);
-                    jQuery("#modal_tarefa_detalhes input#tempo").val(data.TempoPrevisto);
-                    jQuery("#modal_tarefa_detalhes input#vencimento").val(data.Vencimento);
+                    jQuery("#modal_tarefa_detalhes input#mtd_ocorrencia_id").val(data.idOcorrencia);
+                    jQuery("#modal_tarefa_detalhes input#mtd_descricao").val(data.Descricao);
+                    jQuery("#modal_tarefa_detalhes textarea#mtd_descricao_cliente").val(data.DescricaoCliente);
+                    jQuery("#modal_tarefa_detalhes input#mtd_tempo").val(data.TempoPrevisto);
+                    jQuery("#modal_tarefa_detalhes input#mtd_vencimento").val(data.Vencimento);
+                    jQuery("#modal_tarefa_detalhes #mtd_area").val(data.area);
+                    jQuery("#modal_tarefa_detalhes #mtd_prioridade").val(data.prioridade);
                     if(data.Urls != null){
                         data.Urls.forEach(function(valor, chave){
                             jQuery("#modal_tarefa_detalhes #container_img").append("<div class='col s12 m3'><img class='responsive-img pointer' src='"+valor+"'></div>");
@@ -138,6 +141,17 @@
                     }
                 }, "json");
                 jQuery('#modal_tarefa_detalhes').modal('open');
+            }
+
+            function ocorrencia_update(){
+                url = "<?php echo get_template_directory_uri(); ?>/bd/ocorrencia_detalhe_update.php";
+                dados = jQuery("#modal_tarefa_detalhes form#fm_mtd").serialize();
+                jQuery.post(url, dados, function(data){
+                    // console.log(data);
+                    setTimeout(function(){
+                        location.reload();
+                    }, 500);
+                }, "json");
             }
         </script>
         <style>
@@ -277,27 +291,54 @@
         <div id="modal_tarefa_detalhes" class="modal">
             <div class="modal-content" style="padding-bottom:0 ;">
                  <div class="row center">
+                    <form id="fm_mtd" method="post">
+                    <input type="hidden" name="mtd_ocorrencia_id" id="mtd_ocorrencia_id">
                     <h4 class="no-margin" style="margin:0;">Detalhes da Ocorrencia</h4>
                     <div class="row">
                         <div class="input-field col s12">
-                            <input id="descricao" name="descricao" type="text">
+                            <input id="mtd_descricao" name="mtd_descricao" type="text">
                             <label for="descricao">Descricao</label>
                         </div>
                         <div class="row">
                             <div class="input-field col s12">
-                                <textarea id="descricao_cliente" name="descricao_cliente" class="materialize-textarea"></textarea>
+                                <textarea id="mtd_descricao_cliente" name="mtd_descricao_cliente" class="materialize-textarea"></textarea>
                                 <label for="descricao_cliente">Descricao Cliente</label>
                             </div>
                         </div>
                         <div class="input-field col s12 m6">
-                            <input id="tempo" name="tempo" type="text">
+                            <input id="mtd_tempo" name="mtd_tempo" type="text">
                             <label for="tempo">Tempo Previsto</label>
                         </div>
                         <div class="input-field col s12 m6">
-                            <input id="vencimento" name="vencimento" type="date">
+                            <input id="mtd_vencimento" name="mtd_vencimento" type="date">
                             <label for="vencimento" class="active">Vencimento</label>
                         </div>
                     </div>
+                    <div class="input-field col s12 m3">
+                        <select class="browser-default" name="mtd_prioridade" id="mtd_prioridade">
+                            <option value="2">Normal</option>
+                            <option value="3">Alta</option>
+                            <option value="1">Baixa</option>
+                        </select>
+                        <label for="prioridade">Prioridade</label>
+                    </div>
+                    <div class="input-field col s12 m5">
+                        <select class="browser-default" name="mtd_area" id="mtd_area">
+                            <?php
+                                $areas = $wpdb->get_results("SELECT * FROM area");
+                                foreach( $areas as $a ){
+                            ?>
+                                <option value="<?php echo $a->idArea; ?>"><?php echo $a->Descricao; ?> </option>
+                            <?php
+                                }
+                            ?>
+                        </select>
+                        <label for="area">Projeto</label>
+                    </div>
+                    <div class="col s12 m4">
+                        <a href="#!" class="btn black right"onclick="ocorrencia_update()">Salvar Alterações</a>
+                    </div>
+                </form>
                 </div>
                 <div class="row" id="container_img"></div>
             </div>
