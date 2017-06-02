@@ -1,5 +1,5 @@
 <?php
-    define('WP_USE_THEMES', false); 
+    define('WP_USE_THEMES', false);
     $parse_uri = explode( 'wp-content', $_SERVER['SCRIPT_FILENAME'] );
     require_once( $parse_uri[0] . 'wp-load.php' );
     global $wpdb;
@@ -11,16 +11,18 @@
         $url[] = $u->Url;
     }
     $detalhes = $wpdb->get_row("SELECT * FROM ocorrencia WHERE idOcorrencia = '$id' ");
-    
+
     if( $wpdb->num_rows > 0 ){
         $resposta = array(
-            "cod" => 0,
+            "idOcorrencia" => $id,
             "msg" => "Dados encontrados",
             "Descricao" => $detalhes->Descricao,
             "DescricaoCliente" => $detalhes->DescricaoCliente,
             "Vencimento" => $detalhes->Vencimento,
             "TempoPrevisto" => $detalhes->TempoPrevisto,
-            "Urls" => $url
+            "Urls" => $url,
+            "prioridade" => $detalhes->OcorrenciaPrioridade_idOcorrenciaPrioridade,
+            "area" => $detalhes->Area_idArea
         );
     }else{
         $resposta = array(
