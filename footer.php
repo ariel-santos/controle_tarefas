@@ -13,7 +13,7 @@
     </div>
     <div class="footer-copyright">
         <div class="container">
-            © 2017 Falarme
+            © 2017 <?php echo get_bloginfo(); ?>
         </div>
     </div>
 </footer>
