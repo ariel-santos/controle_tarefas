@@ -18,7 +18,7 @@
 
         if( wp_check_password($pass, $hash) ) {
             setcookie("login", $login, time() + 3600, "/");
-            setcookie("id", $user->idUsuario, time() + 3600, "/");
+            setcookie("id", $user->post_id, time() + 3600, "/");
 
             $resposta = array(
                 "cod" => 0,
