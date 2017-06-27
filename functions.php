@@ -353,7 +353,29 @@ function empresa_html($post){
 	?>
 		<script type="text/javascript" src="<?php echo get_template_directory_uri(); ?>/js/materialize.min.js"></script>
 	    <link type="text/css" rel="stylesheet" href="<?php echo get_template_directory_uri(); ?>/css/materialize.css" >
+		<!-- Color picker -->
+		<script type="text/javascript" src="<?php echo get_template_directory_uri(); ?>/js/farbtastic_color_picker.js"></script>
+	    <link type="text/css" rel="stylesheet" href="<?php echo get_template_directory_uri(); ?>/css/farbtastic_color_picker.css" >
 	    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+		<script>
+			jQuery(document).ready(function(){
+				jQuery('#picker').farbtastic('#cor');
+			});
+
+			function modal_projeto_cadastrar(){
+				dados = jQuery("#TB_ajaxContent input").serialize();
+				url = "<?php echo get_template_directory_uri(); ?>/adm/empresa/projeto.php";
+				jQuery.post(url , dados, function(data){
+					console.log(data);
+					jQuery("#TB_ajaxContent p b").html(data.msg);
+					if(data.cod == 0 ){
+						setTimeout(function(){
+							location.reload();
+						}, 1500);
+					}
+				}, "json");
+			}
+		</script>
 		<div class="wrap">
 			<div class="row">
 				<div class="input-field col s4">
@@ -365,6 +387,73 @@ function empresa_html($post){
 		          	<label for="site">Site</label>
 		        </div>
 			</div>
+			<!-- botao que ativa modal de cadastro de projeto -->
+			<div class="row">
+				<?php add_thickbox(); ?>
+				<a href="#TB_inline?&inlineId=modal_projeto" class="thickbox btn black">+ Projeto</a>
+			</div>
+
+			<div class="row container-projetos">
+				<?php
+					$projetos = $wpdb->get_results("SELECT * FROM area WHERE empresa_id = $post_id ");
+					if(!empty($projetos)){
+					?>
+					<h1>Projetos relacionados</h1>
+					<table class="striped">
+				   		<thead>
+					 		<tr>
+								<th>Identificacao</th>
+						 		<th>Descricao</th>
+						 		<th>Cor</th>
+								<th>Excluir</th>
+					 		</tr>
+				   		</thead>
+						<tbody>
+							<?php
+								foreach ($projetos as $p) {
+									?>
+									<tr>
+										<td><?php echo $p->idArea; ?></td>
+										<td><?php echo $p->Descricao; ?></td>
+										<td> <div style="width:20px; height:20px; background:<?php echo $p->cor; ?>;"></div> </td>
+										<td>x</td>
+								  	</tr>
+									<?php
+								}
+							?>
+						</tbody>
+ 					</table>
+				<?php } ?>
+			</div>
 		</div>
+
+		<!--        MODAL PARA CADASTRO DE FOTO         -->
+        <div id="modal_projeto" style="display:none;">
+            <div class="row modal-container-cadastro">
+                <div class="col s12">
+                    <p><b> Cadastro de Projeto </b></p>
+                </div>
+				<form>
+				<input type="hidden" name="acao" value="cadastrar">
+				<input type="hidden" name="empresa_id" value="<?php echo $post_id; ?>">
+                <div class="col s12">
+                    <div class="input-field col s12 m6">
+                        <input type="text" name="descricao" id="descricao">
+                        <label class="label_toggle"> Descrição/Nome </label>
+                    </div>
+                    <div class="input-field col s12 m6">
+                        <input type="text" name="cor" id="cor" value="#123456">
+                        <label class="label_toggle"> Cor </label>
+                    </div>
+                </div>
+				</form>
+				<div class="col s12 m6">
+					<div id="picker"></div>
+				</div>
+            </div>
+            <div class="row center">
+                <a href="#!" class="btn black" onclick="modal_projeto_cadastrar()">Cadastrar</a>
+            </div>
+        </div>
 	<?php
 }
