@@ -162,3 +162,209 @@ function as_wp_media(){
 }
 
 add_action( 'admin_enqueue_scripts', 'as_wp_media' );
+
+/*	Registrando usuario do falarme */
+add_action('init', 'colaborador_register');
+function colaborador_register() {
+    $labels = array(
+        'name' => _x('Colaborador', 'post type general name'),
+        'singular_name' => _x('Colaborador ', 'post type singular name'),
+        'add_new' => _x('Adicionar Novo', 'Colaborador item'),
+        'add_new_item' => __('Adicionar Novo Colaborador'),
+        'edit_item' => __('Editar Colaborador'),
+        'new_item' => __('Novo Colaborador'),
+        'view_item' => __('Ver Colaborador'),
+        'search_items' => __('Procurar Noticia'),
+        'not_found' =>  __('Nada Encontrado'),
+        'not_found_in_trash' => __('Nada Encontrado na Lixeira'),
+        'parent_item_colon' => ''
+    );
+
+    $args = array(
+        'labels' => $labels,
+        'public' => true,
+        'publicly_queryable' => true,
+        'show_ui' => true,
+        'query_var' => true,
+        'rewrite' => true,
+        'capability_type' => 'post',
+        'hierarchical' => false,
+        'menu_icon'   => 'dashicons-businessman',
+        'supports' => array('title','editor', 'thumbnail')
+    );
+    register_post_type( 'colaborador' , $args );
+}
+
+add_action('add_meta_boxes', 'colaborador_metabox');
+
+function colaborador_metabox(){
+    add_meta_box(
+        'colaborador',
+        'Dados colaborador',
+        'colaborador_html',
+        'colaborador',
+        'normal',
+        'low'
+    );
+}
+
+add_action('save_post', 'save_colaborador');
+
+function save_colaborador($post_id){
+    global $wpdb;
+    if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) {
+		return;
+	}
+	$post_id = $_POST['post_ID'];
+	$post_type = $_POST['post_type'];
+
+	if($post_type == 'colaborador'){
+		$login = $_POST['login'];
+		$email = $_POST['email'];
+		$senha = $_POST['senha'];
+
+		$hash = wp_hash_password($senha);
+		$empresa = explode("-", $_POST['empresa']);
+
+		$wpdb->replace(
+			'usuario',
+			array(
+				'post_id' => $post_id,
+				'email' => $email,
+				'Login' => $login,
+				'Senha' => $hash,
+				'empresa_id' => $empresa[0]
+			)
+		);
+	}
+
+}
+
+function colaborador_html($post){
+    global $wpdb;
+    $post_id = get_the_ID();
+	$usuario = $wpdb->get_row(" SELECT * FROM usuario WHERE post_id = $post_id ");
+	$empresas_sql = $wpdb->get_results(" SELECT ID, post_title FROM wp_posts WHERE post_type = 'empresa' AND post_status = 'publish' ");
+		foreach ($empresas_sql as $es) {
+			$index = $es->ID . "-" . $es->post_title;
+			$empresa[$index] = "";
+		}
+
+	?>
+		<script type="text/javascript" src="<?php echo get_template_directory_uri(); ?>/js/materialize.min.js"></script>
+		<link type="text/css" rel="stylesheet" href="<?php echo get_template_directory_uri(); ?>/css/materialize.css" >
+		<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+		<script>
+			jQuery(document).ready(function(){
+				jQuery('input.empresa_autocomplete').autocomplete({
+				    data: <?php echo json_encode($empresa); ?>
+			  	});
+			});
+		</script>
+		<div class="wrap">
+			<div class="row">
+				<div class="input-field col s12">
+		          	<input type="text" id="empresa" name="empresa" class="empresa_autocomplete" placeholder="Pesquisar pela empresa " value="<?php echo $usuario->empresa_id; ?>">
+		          	<label for="empresa">Empresa</label>
+		        </div>
+				<div class="input-field col s4">
+		          	<input id="login" name="login" type="text" value="<?php echo $usuario->Login; ?>">
+		          	<label for="login">Login</label>
+		        </div>
+				<div class="input-field col s4">
+		          	<input id="email" name="email" type="text" value="<?php echo $usuario->email; ?>">
+		          	<label for="email">Email</label>
+		        </div>
+				<div class="input-field col s4">
+		          	<input id="senha" name="senha" type="text" value="<?php echo $usuario->Senha; ?>" placeholder="sua senha sera criptografada ">
+		          	<label for="senha">Senha</label>
+		        </div>
+			</div>
+		</div>
+	<?php
+}
+
+/*	Registrando empresa do falarme */
+add_action('init', 'empresa_register');
+function empresa_register(){
+    $labels = array(
+        'name' => _x('Empresa', 'post type general name'),
+        'singular_name' => _x('Empresa ', 'post type singular name')
+    );
+
+    $args = array(
+        'labels' => $labels,
+        'public' => true,
+        'publicly_queryable' => true,
+        'show_ui' => true,
+        'query_var' => true,
+        'rewrite' => true,
+        'capability_type' => 'post',
+        'hierarchical' => false,
+        'menu_icon'   => 'dashicons-store',
+        'supports' => array('title','editor', 'thumbnail')
+    );
+    register_post_type( 'empresa' , $args );
+}
+
+add_action('add_meta_boxes', 'empresa_metabox');
+
+function empresa_metabox(){
+    add_meta_box(
+        'empresa',
+        'Dados empresa',
+        'empresa_html',
+        'empresa',
+        'normal',
+        'low'
+    );
+}
+
+add_action('save_post', 'save_empresa');
+
+function save_empresa($post_id){
+    global $wpdb;
+    if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) {
+		return;
+	}
+
+	$post_id = $_POST['post_ID'];
+	$post_type = $_POST['post_type'];
+
+	if($post_type == 'empresa'){
+		$telefone = $_POST['telefone'];
+		$site = $_POST['site'];
+
+		$wpdb->replace(
+			'empresa',
+			array(
+				'post_id' => $post_id,
+				'telefone' => $telefone,
+				'site' => $site
+			)
+		);
+	}
+}
+
+function empresa_html($post){
+    global $wpdb;
+    $post_id = get_the_ID();
+	$empresa = $wpdb->get_row("SELECT * FROM empresa WHERE post_id = $post_id ");
+	?>
+		<script type="text/javascript" src="<?php echo get_template_directory_uri(); ?>/js/materialize.min.js"></script>
+	    <link type="text/css" rel="stylesheet" href="<?php echo get_template_directory_uri(); ?>/css/materialize.css" >
+	    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+		<div class="wrap">
+			<div class="row">
+				<div class="input-field col s4">
+					<input id="telefone" name="telefone" type="text" value="<?php echo $empresa->telefone; ?>">
+		          	<label for="telefone">Telefone</label>
+		        </div>
+				<div class="input-field col s4">
+					<input id="site" name="site" type="text" value="<?php echo $empresa->site; ?>">
+		          	<label for="site">Site</label>
+		        </div>
+			</div>
+		</div>
+	<?php
+}

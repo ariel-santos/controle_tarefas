@@ -9,22 +9,22 @@
         <script>
             function verificar_acesso(){
                 dados = jQuery('form#fm_acesso').serialize();
-
+            
                 jQuery.post("<?php echo get_template_directory_uri(); ?>/bd/acesso.php", dados, function(data){
                     jQuery("span#resposta").html(data.msg);
                     if(data.cod == 0){
                         setTimeout(function(){
-                            window.location.href = "/dashboard/";
+                            window.location.href = "/dashboard/";    
                         }, 500);
                     }
                 }, "json");
             }
-
+            
             function mostra_fm(mostra, esconde){
                 jQuery(mostra).removeClass("hide");
                 jQuery(esconde).addClass("hide");
             }
-
+            
             function cadastrar_usuario(){
                 dados = jQuery("#fm_cadastro").serialize();
                 jQuery.post("<?php echo get_template_directory_uri(); ?>/bd/cadastra_usuario.php", dados, function(data){
@@ -38,7 +38,7 @@
         </script>
     </head>
     <body>
-        <?php get_header('topo');
+        <?php get_header('topo'); 
 //        print_r($_COOKIE);
 ?>
         <div class="row center container">
@@ -54,8 +54,8 @@
                     <div class="col s12">
                         <h4>Acesso</h4>
                     </div>
-                </div>
-
+                </div>   
+                
                 <form method="post" id="fm_acesso" name="fm_acesso" action="<?php echo get_site_url(); ?>/dashboard/">
                     <div class="row">
                         <div class="input-field col s12">
@@ -79,7 +79,7 @@
                         echo $_COOKIE["id"];
                     ?>
                 </div>
-
+                
                 <div class="col s12 m6 offset-m3 hide" id="container-cadastro">
                     <div class="row">
                         <div class="col s12">
@@ -101,7 +101,7 @@
                                 <label for="c_senha">Senha</label>
                             </div>
                         </div>
-                    </form>
+                    </form>    
                     <div class="row center">
                         <div class="col s12">
                             <a class="btn black" onclick="cadastrar_usuario()">CADASTRAR</a>
@@ -109,7 +109,8 @@
                     </div>
                 </div>
             </div>
-
+        
         <?php get_footer();?>
     </body>
 </html>
+

@@ -51,19 +51,6 @@
                         ocorrencia_muda_status(id, status);
                         operacao(id, status);
                     }
-//                    funcao para limitar ocorrencia
-//                    revert: "invalid",
-//                    stop: function(){
-//                        n = jQuery("ul.limite-1 li").length;
-//                        if( n > 0 ){
-//                            jQuery("ul.limite-1").removeClass('sortable');
-//                            jQuery("ul.limite-1").removeClass('ui-sortable');
-//                        }else{
-//                            jQuery("ul.limite-1").addClass('sortable');
-//                            jQuery("ul.limite-1").addClass('ui-sortable');
-//                        }
-//                    }
-
                 });
                 jQuery( "ul, li" ).disableSelection();
                 atualiza();
@@ -73,7 +60,7 @@
             function atualiza(){
                 setInterval(function(){
                     location.reload();
-                }, 60000);
+                }, 300000);
             }
 
             function operacao(id, status){
@@ -287,6 +274,23 @@
                 </div>
             </div>
 
+            <div class="hide col s12 m5 container-pesquisa z-depth-3">
+                <div class="acao-icone">
+                    <i class="material-icons">close</i>
+                </div>
+                <nav class="col s12 black">
+                <form>
+                    <div class="input-field">
+                        <input id="search" type="search" required>
+                        <label class="label-icon" for="search"><i class="material-icons">search</i></label>
+                        <i class="material-icons">close</i>
+                    </div>
+                </form>
+                </nav>
+                <div class="col s12 container-pesquisa-resultado">
+
+                </div>
+            </div>
 
         <div id="modal_tarefa_detalhes" class="modal">
             <div class="modal-content" style="padding-bottom:0 ;">

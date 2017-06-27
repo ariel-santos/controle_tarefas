@@ -8,20 +8,22 @@
 <script src="<?php echo get_template_directory_uri();?>/js/materialize.js"></script>
 <script>
 	jQuery(document).ready(function(){
+		jQuery('.carousel').carousel();
+		jQuery('.carousel.carousel-slider').carousel({fullWidth: true});
         jQuery('.modal').modal();
         jQuery('select').material_select();
-
+        
         jQuery("form#fm_add_tarefa").on('submit', function(e){
             e.preventDefault();
-
+            
             var dados = new FormData(this);
             dados.append( "file[]", jQuery('input#input_wp_media')[0].files[0]);
             dados.append( "file[]", jQuery('input#input_wp_media')[0].files[1]);
             dados.append( "file[]", jQuery('input#input_wp_media')[0].files[2]);
-
+            
 //            console.log(jQuery('input#input_wp_media')[0].files);
 //            console.log(jQuery('input#input_wp_media')[0].files[0]);
-
+            
             jQuery.ajax({
                 url: "<?php echo get_template_directory_uri();?>/bd/cadastra_tarefa.php",
                 type: 'POST',
@@ -36,13 +38,13 @@
                 console.log(data);
                 if(data.cod == 0 ){
                     setTimeout(function(){
-                        jQuery('#modal_tarefa').modal('close');
+                        jQuery('#modal_tarefa').modal('close');  
                         location.reload();
                     },2000);
                 }
             });
         });
-
+        
         jQuery('.collapsible').collapsible({
             onOpen: function(el){ jQuery(el).css("display", "grid"); },
             onClose: function(el){ jQuery(el).css("display", "block"); }

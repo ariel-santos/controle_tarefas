@@ -1,7 +1,7 @@
 /*
-    Theme Name:   Falarme  
-    Description:  Falarme  
-    
+    Theme Name:   Falarme
+    Description:  Falarme
+
     Text Domain:  falarme
 */
 
@@ -11,3 +11,8 @@
 .bordered{border: 1px solid silver; }
 
 #container-usuario{ font-size: 15pt;}
+
+.container-pesquisa{
+    float: left; position: absolute;     height: 100%;
+    background: silver; top: 0; right: 0; 
+}
