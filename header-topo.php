@@ -1,25 +1,27 @@
-<div class="row grey">
+<div class="row black">
     <div class="col s12 m4">
-        <h4> Talk to me </h4>
+        <h4 class="blue-text darken-4"> <?php echo get_bloginfo(); ?></h4>
     </div>
     <div class="col s12 m4" id="container-usuario">
         <?php
             if( $_COOKIE["login"] != ""){
+                $usuario = $wpdb->get_row("SELECT * FROM usuario WHERE post_id = " . $_COOKIE['id'] );
             ?>
-                <p>
-                    User: <b> <?php echo $_COOKIE["login"]; ?> </b> <br>
-                    <a href="#!" onclick="sair();"> Sair</a>
-                </p>
+                <div class="col s12 white-text">
+                    Usuario: <b> <?php echo $usuario->Login; ?> </b> <br>
+                </div>
+                <div class="col s12 m6">
+                    <a href="#modal-usuario-dados"> Editar dados </a>
+                </div>
+                <div class="col s12 m6">
+                    <a href="#!" onclick="sair();"> Sair </a>
+                </div>
             <?php
             }
         ?>
 
     </div>
     <div class="col s12 m4">
-        <?php
-            $permissao = $wpdb->get_var("SELECT Administrador FROM usuario WHERE idUsuario = " . $_COOKIE["id"]);
-            if($permissao == 's'){
-        ?>
             <script>
                 function add_projeto(){
                     descricao = jQuery("input#descricao").val();
@@ -58,9 +60,23 @@
                     });
                     custom_uploader.open();
                 }
-            </script>
-            <a class="btn black right"  href="#modal_area"> +Projeto </a>
 
+                function modal_usuario_atualizar(){
+                    dados = jQuery("#modal-usuario-dados form").serialize();
+                    url = "<?php echo get_template_directory_uri(); ?>/usuario/atualiza_dados.php";
+                    jQuery.post(url, dados, function(data){
+                        console.log(data);
+                        jQuery("#modal-usuario-dados p.msg").html(data.msg);
+                        if( 0 == data.cod ){
+                            setTimeout(function(){
+                                location.reload();
+                            }, 1500);
+                        }
+                    }, "json");
+                }
+            </script>
+
+            <p class="col s12 m6"><a class="btn blue darken-4 right hide"  href="#modal_area"> +Projeto </a></p>
             <div id="modal_area" class="modal">
                 <div class="modal-content">
                      <div class="row center">
@@ -81,8 +97,7 @@
                 </div>
             </div>
 
-            <a class="btn black right"  href="#modal_tarefa"> +Tarefa </a>
-
+            <p class="col s12 m6"> <a class="btn blue darken-4 right"  href="#modal_tarefa"> +Tarefa </a> </p>
             <div id="modal_tarefa" class="modal">
                 <div class="modal-content" style="padding-bottom:0 ;">
                      <div class="row center">
@@ -167,8 +182,41 @@
                 </div>
             </div>
 
+            <!-- Modal para editar dados do usuario -->
+            <div id="modal-usuario-dados" class="modal">
+                <div class="row modal-content">
+                    <form class="col s12 m8 offset-m2">
+                        <input type="hidden" name="id" id="id" value="<?php echo $usuario->post_id; ?>">
+                        <h4 class="center"><?php echo get_bloginfo(); ?></h4>
+                        <h5 class="center">Dados do Usuario </h5>
+                        <p class="msg center"></p>
+                        <div class="input-field col s12">
+                            <i class="material-icons prefix">account_circle</i>
+                            <input id="login" type="text" name="login" value="<?php echo $usuario->Login; ?>">
+                            <label for="login">Login </label>
+                        </div>
+                        <div class="input-field col s12">
+                            <i class="material-icons prefix">account_circle</i>
+                            <input id="email" type="text" name="email" value="<?php echo $usuario->email; ?>">
+                            <label for="email">Email </label>
+                        </div>
+                        <div class="input-field col s12">
+                            <i class="material-icons prefix">lock</i>
+                            <input id="senha" type="password" name="senha" placeholder="Sua senha sera criptografada ">
+                            <label for="senha">Senha </label>
+                        </div>
+                        <div class="row center">
+                            <div class="input-field col s12 center">
+                                <a href="#!" onclick="modal_usuario_atualizar()" class="btn black center"> Atualizar </a>
+                            </div>
+                        </div>
+                        <div class="input-field col s12 center">
+                            <p></p>
+                        </div>
+                    </form>
+                </div>
+            </div>
 
-        <?php } ?>
     </div>
 </div>
 <!--
