@@ -1,6 +1,6 @@
 <div class="row black navbar-fixed">
     <div class="col s12 m4">
-        <h4 class="blue-text darken-4"> Talk to me </h4>
+        <h4 class="blue-text darken-4"> <?php echo get_bloginfo(); ?></h4>
     </div>
     <div class="col s12 m4" id="container-usuario">
 
@@ -14,7 +14,7 @@
     <div id="modal-acesso" class="modal">
       <div class="row modal-content">
         <form class="col s12 m8 offset-m2">
-            <h4 class="center">Talk to me</h4>
+            <h4 class="center"><?php echo get_bloginfo(); ?></h4>
             <h5 class="center">Informe seus dados de acesso</h5>
             <p class="msg center"></p>
             <div class="input-field col s12">
