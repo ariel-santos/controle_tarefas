@@ -5,14 +5,30 @@
     Text Domain:  falarme
 */
 
+/*  MOdal  */
+.modal{ max-height: 85% !important; }
+
 .no-margin{ margin: 0px !important;}
 .no-padding{ padding: 0px !important;}
 .pointer{cursor: pointer;}
 .bordered{border: 1px solid silver; }
+.btn-ativo{box-shadow: none !important; background: gray !important;}
+.btn-inativo{ background: black !important;}
 
 #container-usuario{ font-size: 15pt;}
 
 .container-pesquisa{
     float: left; position: absolute;     height: 100%;
-    background: silver; top: 0; right: 0; 
+    background: silver; top: 0; right: 0;
 }
+
+.draggable{  border:1px solid silver; width: 50%; min-height: 1px; height: auto; padding: 0.5em; float: left; margin: 10px 10px 10px 0; color:white; cursor: pointer; }
+
+/* page-dashboard */
+/*            #page-dashboard table tr td ul.sortable{ width: 48%; margin: 0 1%; padding: 0;  float: left;}*/
+#page-dashboard ul.sortable{ width:48%; margin: 0 1%; padding: 0;  float: left; min-height: 150px; }
+#page-dashboard ul.l100{ width:98%; margin: 0 1%; padding: 0;  float: left; min-height: 150px;}
+#page-dashboard ul.sortable li{padding: 10px; border-radius: 5px; width: 96%; margin: 10px 2%;}
+#page-dashboard ul.sortable li i.material-icons{ text-shadow: 0px 0px 5px white; }
+#page-dashboard .container-sortable{ min-height: 85%; }
+#page-dashboard ul.sortable img.responsive-img{ max-width: 80%; float: right; }

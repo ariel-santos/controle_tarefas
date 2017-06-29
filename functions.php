@@ -222,20 +222,43 @@ function save_colaborador($post_id){
 		$login = $_POST['login'];
 		$email = $_POST['email'];
 		$senha = $_POST['senha'];
-
-		$hash = wp_hash_password($senha);
+		$ativo = $_POST['ativo'];
+		$cor = $_POST['cor'];
 		$empresa = explode("-", $_POST['empresa']);
 
-		$wpdb->replace(
-			'usuario',
-			array(
-				'post_id' => $post_id,
-				'email' => $email,
-				'Login' => $login,
-				'Senha' => $hash,
-				'empresa_id' => $empresa[0]
-			)
-		);
+		$status = $_POST['original_post_status'];
+
+		$hash = wp_hash_password($senha);
+
+		if( $status == 'publish' ){
+			$wpdb->update(
+				'usuario',
+				array(
+					'email' => $email,
+					'Login' => $login,
+					'cor' => $cor,
+					'ativo' => $ativo,
+					'empresa_id' => $empresa[0],
+					'Senha' => $hash
+				),
+				array(
+					'post_id' => $post_id
+				)
+			);
+		}else{
+			$wpdb->insert(
+				'usuario',
+				array(
+					'post_id' => $post_id,
+					'email' => $email,
+					'Login' => $login,
+					'cor' => $cor,
+					'ativo' => $ativo,
+					'empresa_id' => $empresa[0],
+					'Senha' => $hash
+				)
+			);
+		}
 	}
 
 }
@@ -244,41 +267,78 @@ function colaborador_html($post){
     global $wpdb;
     $post_id = get_the_ID();
 	$usuario = $wpdb->get_row(" SELECT * FROM usuario WHERE post_id = $post_id ");
+	$empresa_id = $usuario->empresa_id;
+	if( "" == $usuario->cor ){
+		$usuario_cor = "#123456";
+	}else{
+		$usuario_cor = $usuario->cor;
+	}
+
 	$empresas_sql = $wpdb->get_results(" SELECT ID, post_title FROM wp_posts WHERE post_type = 'empresa' AND post_status = 'publish' ");
 		foreach ($empresas_sql as $es) {
 			$index = $es->ID . "-" . $es->post_title;
 			$empresa[$index] = "";
 		}
 
+		$minha_empresa = $wpdb->get_var("
+			SELECT concat(e.post_id , '-', wpp.post_title) as empresa_nome
+			FROM empresa e, wp_posts wpp
+			WHERE e.post_id = $empresa_id
+			AND wpp.ID = e.post_id
+			LIMIT 1
+		");
 	?>
 		<script type="text/javascript" src="<?php echo get_template_directory_uri(); ?>/js/materialize.min.js"></script>
 		<link type="text/css" rel="stylesheet" href="<?php echo get_template_directory_uri(); ?>/css/materialize.css" >
 		<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+		<script type="text/javascript" src="<?php echo get_template_directory_uri(); ?>/js/farbtastic_color_picker.js"></script>
+		<link type="text/css" rel="stylesheet" href="<?php echo get_template_directory_uri(); ?>/css/farbtastic_color_picker.css" >
+
 		<script>
 			jQuery(document).ready(function(){
 				jQuery('input.empresa_autocomplete').autocomplete({
 				    data: <?php echo json_encode($empresa); ?>
 			  	});
+
+				jQuery('#picker').farbtastic('#cor');
+				jQuery('select').material_select();
 			});
 		</script>
 		<div class="wrap">
 			<div class="row">
-				<div class="input-field col s12">
-		          	<input type="text" id="empresa" name="empresa" class="empresa_autocomplete" placeholder="Pesquisar pela empresa " value="<?php echo $usuario->empresa_id; ?>">
+				<div class="input-field col s2">
+					<select name="ativo" id="ativo">
+						<option value="0" <?php selected( $usuario->ativo, 0 );  ?>>Não</option>
+				      	<option value="1" <?php selected( $usuario->ativo, 1 );  ?>>Sim</option>
+				    </select>
+					<label>Ativo</label>
+				</div>
+				<div class="input-field col s6">
+		          	<input type="text" id="empresa" name="empresa" class="empresa_autocomplete" placeholder="Pesquisar pela empresa " value="<?php echo $minha_empresa; ?>">
 		          	<label for="empresa">Empresa</label>
 		        </div>
 				<div class="input-field col s4">
 		          	<input id="login" name="login" type="text" value="<?php echo $usuario->Login; ?>">
 		          	<label for="login">Login</label>
 		        </div>
+
+				<div class="input-field col s4">
+					<input id="cor" name="cor" type="text" value="<?php echo $usuario_cor; ?>">
+					<label for="cor">COLABORADOR</label>
+				</div>
+
 				<div class="input-field col s4">
 		          	<input id="email" name="email" type="text" value="<?php echo $usuario->email; ?>">
 		          	<label for="email">Email</label>
 		        </div>
 				<div class="input-field col s4">
-		          	<input id="senha" name="senha" type="text" value="<?php echo $usuario->Senha; ?>" placeholder="sua senha sera criptografada ">
+		          	<input id="senha" name="senha" type="text" placeholder="sua senha sera criptografada ">
 		          	<label for="senha">Senha</label>
 		        </div>
+
+			</div>
+			<div class="col s12">
+				<div id="picker"></div>
 			</div>
 		</div>
 	<?php
@@ -351,6 +411,10 @@ function empresa_html($post){
     $post_id = get_the_ID();
 	$empresa = $wpdb->get_row("SELECT * FROM empresa WHERE post_id = $post_id ");
 	?>
+		<style>
+			.pointer{ cursor: pointer; }
+			#TB_ajaxContent{ width: 100% !important; height: 100% !important; }
+		</style>
 		<script type="text/javascript" src="<?php echo get_template_directory_uri(); ?>/js/materialize.min.js"></script>
 	    <link type="text/css" rel="stylesheet" href="<?php echo get_template_directory_uri(); ?>/css/materialize.css" >
 		<!-- Color picker -->
@@ -360,14 +424,20 @@ function empresa_html($post){
 		<script>
 			jQuery(document).ready(function(){
 				jQuery('#picker').farbtastic('#cor');
+				jQuery('select').material_select();
+				jQuery('.tooltipped').tooltip({delay: 50});
 			});
+
+			function projeto_abrir_modal(){
+				jQuery(".btn-modal-cadastro").attr("onclick", "modal_projeto_cadastrar");
+				jQuery("#TB_ajaxContent input").val("");
+			}
 
 			function modal_projeto_cadastrar(){
 				dados = jQuery("#TB_ajaxContent input").serialize();
 				url = "<?php echo get_template_directory_uri(); ?>/adm/empresa/projeto.php";
 				jQuery.post(url , dados, function(data){
-					console.log(data);
-					jQuery("#TB_ajaxContent p b").html(data.msg);
+					Materialize.toast(data.msg, 4000);
 					if(data.cod == 0 ){
 						setTimeout(function(){
 							location.reload();
@@ -375,6 +445,49 @@ function empresa_html($post){
 					}
 				}, "json");
 			}
+
+			function projeto_apagar(id){
+				url = "<?php echo get_template_directory_uri(); ?>/adm/empresa/projeto.php";
+				dados = {id: id, acao: "delete" };
+				jQuery.post(url, dados, function(data){
+					Materialize.toast(data.msg, 4000);
+					if(data.cod == 0 ){
+						setTimeout(function(){
+							location.reload();
+						}, 1000);
+					}
+				}, "json");
+			}
+
+			function projeto_detalhe(id){
+				url = "<?php echo get_template_directory_uri(); ?>/adm/empresa/projeto.php";
+				dados = {id: id, acao: "detalhe" };
+				jQuery.post(url, dados, function(data){
+					console.log(data);
+					jQuery(".btn-add-projeto").trigger("click");
+					jQuery("#TB_ajaxContent label").addClass("active");
+					jQuery("#TB_ajaxContent p b").html("Atualização de Projeto");
+					jQuery("#TB_ajaxContent input[name=acao]").val("update");
+					jQuery("#TB_ajaxContent input[name=projeto_id]").val(data.projeto_id);
+					jQuery("#TB_ajaxContent input[name=descricao]").val(data.projeto_descricao);
+					jQuery("#TB_ajaxContent input[name=cor]").val(data.projeto_cor);
+					jQuery("#TB_ajaxContent input[name=cor]").css("background", data.projeto_cor);
+					jQuery(".btn-modal-cadastro").attr("onclick", "projeto_editar()");
+					jQuery(".btn-modal-cadastro").text("Atualiar");
+				}, "json");
+			}
+			function projeto_editar(){
+				url = "<?php echo get_template_directory_uri(); ?>/adm/empresa/projeto.php";
+				dados = jQuery("#TB_ajaxContent input").serialize();
+
+				jQuery.post(url, dados, function(data){
+					console.log(data);
+					if(data.cod == 0){
+						location.reload();
+					}
+				}, "json" );
+			}
+
 		</script>
 		<div class="wrap">
 			<div class="row">
@@ -390,7 +503,7 @@ function empresa_html($post){
 			<!-- botao que ativa modal de cadastro de projeto -->
 			<div class="row">
 				<?php add_thickbox(); ?>
-				<a href="#TB_inline?&inlineId=modal_projeto" class="thickbox btn black">+ Projeto</a>
+				<a href="#TB_inline?&inlineId=modal_projeto" class="thickbox btn black btn-add-projeto">+ Projeto</a>
 			</div>
 
 			<div class="row container-projetos">
@@ -405,6 +518,7 @@ function empresa_html($post){
 								<th>Identificacao</th>
 						 		<th>Descricao</th>
 						 		<th>Cor</th>
+								<th>Editar</th>
 								<th>Excluir</th>
 					 		</tr>
 				   		</thead>
@@ -416,7 +530,8 @@ function empresa_html($post){
 										<td><?php echo $p->idArea; ?></td>
 										<td><?php echo $p->Descricao; ?></td>
 										<td> <div style="width:20px; height:20px; background:<?php echo $p->cor; ?>;"></div> </td>
-										<td>x</td>
+										<td><i class="material-icons pointer" onclick="projeto_detalhe(<?php echo $p->idArea; ?>)">mode_edit</i></td>
+										<td><i class="material-icons pointer" onclick="projeto_apagar(<?php echo $p->idArea; ?>)">delete</i></td>
 								  	</tr>
 									<?php
 								}
@@ -436,14 +551,23 @@ function empresa_html($post){
 				<form>
 				<input type="hidden" name="acao" value="cadastrar">
 				<input type="hidden" name="empresa_id" value="<?php echo $post_id; ?>">
+				<input type="hidden" name="projeto_id" value="">
+
                 <div class="col s12">
-                    <div class="input-field col s12 m6">
+                    <div class="input-field col s12 m8">
                         <input type="text" name="descricao" id="descricao">
                         <label class="label_toggle"> Descrição/Nome </label>
                     </div>
-                    <div class="input-field col s12 m6">
+					<div class="input-field col s12 m4">
+						<select name="letra_cor">
+					      	<option value="#000000"> Preto </option>
+					      	<option value="#ffffff" selected> Branco </option>
+					    </select>
+						<label> Cor da Letra </label>
+					</div>
+					<div class="col s12"> Cor do Projeto </div>
+                    <div class="input-field col s12 m8">
                         <input type="text" name="cor" id="cor" value="#123456">
-                        <label class="label_toggle"> Cor </label>
                     </div>
                 </div>
 				</form>
@@ -452,7 +576,7 @@ function empresa_html($post){
 				</div>
             </div>
             <div class="row center">
-                <a href="#!" class="btn black" onclick="modal_projeto_cadastrar()">Cadastrar</a>
+                <a href="#!" class="btn black btn-modal-cadastro" onclick="modal_projeto_cadastrar()">Cadastrar</a>
             </div>
         </div>
 	<?php
