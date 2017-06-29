@@ -6,6 +6,7 @@
         <?php
             if( $_COOKIE["login"] != ""){
                 $usuario = $wpdb->get_row("SELECT * FROM usuario WHERE post_id = " . $_COOKIE['id'] );
+                $empresa_id = $usuario->empresa_id;
             ?>
                 <div class="col s12 white-text">
                     Usuario: <b> <?php echo $usuario->Login; ?> </b> <br>
@@ -127,7 +128,7 @@
                                     <div class="input-field col s12 m5">
                                         <select name="area" id="area">
                                             <?php
-                                                $areas = $wpdb->get_results("SELECT * FROM area");
+                                                $areas = $wpdb->get_results("SELECT * FROM area WHERE empresa_id = $empresa_id" );
                                                 foreach( $areas as $a ){
                                             ?>
                                                 <option value="<?php echo $a->idArea; ?>"><?php echo $a->Descricao; ?> </option>
@@ -140,7 +141,7 @@
                                     <div class="input-field col s12 m4">
                                         <select name="id_user" id="id_user">
                                             <?php
-                                                $users = $wpdb->get_results("SELECT * FROM usuario");
+                                                $users = $wpdb->get_results("SELECT * FROM usuario WHERE empresa_id = $empresa_id");
                                                 foreach( $users as $u ){
                                             ?>
                                                 <option value="<?php echo $u->idUsuario; ?>"><?php echo $u->Nome; ?> </option>
