@@ -3,10 +3,13 @@
         Template name: Dashboard
     */
     if( $_COOKIE['id'] == "" ){
-        $url = get_site_url() . "/login" ;
+        $url = get_site_url() . "/" ;
         wp_redirect($url);
         exit;
     }
+    $empresa_id = $wpdb->get_var("SELECT empresa_id FROM usuario WHERE post_id = ". $_COOKIE['id']);
+    $projetos_cores = $wpdb->get_results("SELECT idArea, cor FROM area WHERE empresa_id = $empresa_id ");
+    $pessoas_cores = $wpdb->get_results("SELECT post_id, cor FROM usuario WHERE empresa_id = $empresa_id ");
 ?>
 <html>
     <head>
@@ -99,7 +102,6 @@
                     jQuery.each(data, function(i, item){
                         jQuery("tr.area_"+item.Area+" td:first-child ul.sortable")
                             .append('<li class="draggable ui-state-default">'+item.Descricao+'</li>');
-
                         console.log("Area: " + item.Area + " \n Descricao: " + item.Descricao );
                     });
                 }, "json");
@@ -140,135 +142,230 @@
                     }, 500);
                 }, "json");
             }
+
+            function projeto_visualizacao(tipo){
+                if(tipo == 'pessoa'){
+                    jQuery(".btn-pessoa").addClass("btn-ativo").removeClass("btn-inativo");
+                    jQuery(".btn-projeto").removeClass("btn-ativo").addClass("btn-inativo");
+                    console.log(<?php echo json_encode($pessoas_cores); ?>);
+                    jQuery.each( <?php echo json_encode($pessoas_cores); ?>, function(index, value){
+                        console.log(value.post_id + "-" + value.cor);
+                        jQuery("li.usuario-"+value.post_id).css("background", value.cor );
+                    });
+                }else{
+                    jQuery(".btn-projeto").addClass("btn-ativo").removeClass("btn-inativo");
+                    jQuery(".btn-pessoa").removeClass("btn-ativo").addClass("btn-inativo");
+                    console.log(<?php echo json_encode($projetos_cores); ?>);
+                    jQuery.each( <?php echo json_encode($projetos_cores); ?>, function(index, value){
+                        console.log(value.idArea + "-" + value.cor);
+                        jQuery("li.projeto-"+value.idArea).css("background", value.cor );
+                    });
+                }
+            }
+
         </script>
-        <style>
-            .draggable{  border:1px solid silver; width: 50%; min-height: 1px; height: auto; padding: 0.5em; float: left; margin: 10px 10px 10px 0; color:white; cursor: pointer; }
-/*            #page-dashboard table tr td ul.sortable{ width: 48%; margin: 0 1%; padding: 0;  float: left;}*/
-            ul.sortable{ width:48%; margin: 0 1%; padding: 0;  float: left; min-height: 150px; }
-            ul.l100{ width:98%; margin: 0 1%; padding: 0;  float: left; min-height: 150px;}
-            ul.sortable li{padding: 10px; border-radius: 5px; width: 96%; margin: 10px 2%;}
-        </style>
     </head>
-    <body>
+    <body onload="projeto_visualizacao('projeto');">
         <?php get_header('topo'); ?>
         <div class="row">
             <div class="col s12">
-                <div class="row container" id="page-dashboard">
-                    <div class="row black center white-text">
-                        <div class="col s12 m4"> <p><b> Executar </b></p> </div>
-                        <div class="col s12 m4"> <p><b> Executando </b></p> </div>
-                        <div class="col s12 m4"> <p><b> Executado </b></p> </div>
+                <div class="row" id="page-dashboard">
+                    <div class="col s12">
+                        <div class="col s6 m3">
+                            <h4 class="right">Visualizar por:</h4>
+                        </div>
+                        <div class="col s6">
+                            <p>
+                            <a href="#!" class="btn btn-ativo btn-projeto" onclick="projeto_visualizacao('projeto')">Projetos</a>
+                            <a href="#!" class="btn btn-inativo btn-pessoa" onclick="projeto_visualizacao('pessoa')">Pessoas</a>
+                            </p>
+                        </div>
                     </div>
-                    <div class="row">
-                        <ul class="collapsible" data-collapsible="accordion">
-                            <?php
-                                    $user_id = $_COOKIE['id'];
+                    <div class="col s12 m10 offset-m1 black center white-text">
+                        <div class="col s12 m3"> <p><b> Executar </b></p> </div>
+                        <div class="col s12 m3"> <p><b> Executando </b></p> </div>
+                        <div class="col s12 m3"> <p><b> Em Avaliação </b></p> </div>
+                        <div class="col s12 m3"> <p><b> Executado </b></p> </div>
+                    </div>
 
-                                    $areas = $wpdb->get_results("
-                                        SELECT Area_idArea, a.Descricao
-                                        FROM ocorrencia o, area a
-                                        WHERE Usuario_idUsuario = '$user_id'
-                                        AND o.Area_idArea = a.idArea
-                                        GROUP BY Area_idArea
+                    <div class="col s12 m10 offset-m1">
+                        <div class="col s12 m3 bordered no-margin no-padding container-sortable">
+                            <ul class="sortable l100 connectedSortable" data-areaStatus="1" id="executar_<?php echo $area_id; ?>">
+                            <?php
+                                //Definindo cores para prioridade
+                                $prioridadeCor = array('#000','#01579b','#1b5e20','#d32f2f');
+                                // Busca de todas as tarefas com status 1
+                                $executar = $wpdb->get_results("
+                                    SELECT o.idOcorrencia, o.Descricao as Titulo, o.Vencimento, o.OcorrenciaPrioridade_idOcorrenciaPrioridade, a.*, u.idUsuario, u.Login, u.post_id as usuario_post_id, u.cor as usuario_cor
+                                    FROM ocorrencia o, area a, usuario u
+                                    WHERE o.Area_idArea = a.idArea
+                                    AND a.empresa_id = $empresa_id
+                                    AND o.OcorrenciaStatus_idOcorrenciaStatus = 1
+                                    AND o.Usuario_idUsuario = u.idUsuario
+                                    AND o.Vencimento >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
+                                    ORDER BY o.OcorrenciaPrioridade_idOcorrenciaPrioridade DESC
+                                ");
+
+                                foreach ($executar as $ex ) {
+                                    ?>
+                                        <li id="ocorrenciaId_<?php echo $ex->idOcorrencia; ?>" data-ocorrenciaId="<?php echo $ex->idOcorrencia; ?>" onclick="ocorrencia_detalhe(<?php echo $ex->idOcorrencia; ?>)" class="draggable ui-state-default projeto-<?php echo $ex->idArea; ?> usuario-<?php echo $ex->usuario_post_id; ?>">
+                                            <div class="col s9">
+                                            <b><?php echo $ex->Titulo; ?></b>
+                                            </div>
+                                            <div class="col s3">
+                                                <i class="material-icons right" style="color:<?php echo $prioridadeCor[$ex->OcorrenciaPrioridade_idOcorrenciaPrioridade]; ?>;">label</i>
+                                            </div>
+                                            <div class="col s12"><p></p></div>
+                                            <div class="col s9">
+                                                <?php echo $ex->Descricao; ?><br>
+                                                <time > <?php echo date("d/m/Y", strtotime($ex->Vencimento)); ?> </time>
+                                            </div>
+                                            <div class="col s3">
+                                                <?php
+                                                    $url = get_the_post_thumbnail_url($ex->usuario_post_id, 'thumbnail');
+                                                    if( $url != ''){
+                                                        echo '<img src="'.$url.'" class="responsive-img circle">';
+                                                    }else{ echo $ex->Login; }
+                                                ?>
+
+                                            </div>
+                                        </li>
+                                    <?php
+                                }
+                            ?>
+                            </ul>
+                        </div>
+                        <div class="col s12 m3 bordered no-margin no-padding container-sortable">
+                            <ul class="sortable l100 limite-1 connectedSortable" data-areaStatus="2" id="executando_<?php echo $area_id; ?>">
+                                <?php
+                                    $executando = $wpdb->get_results("
+                                        SELECT o.idOcorrencia, o.Descricao as Titulo, o.Vencimento, o.OcorrenciaPrioridade_idOcorrenciaPrioridade, a.*, u.idUsuario, u.Login, u.post_id as usuario_post_id, u.cor as usuario_cor
+                                        FROM ocorrencia o, area a, usuario u
+                                        WHERE o.Area_idArea = a.idArea
+                                        AND a.empresa_id = $empresa_id
+                                        AND o.OcorrenciaStatus_idOcorrenciaStatus = 2
+                                        AND o.Usuario_idUsuario = u.idUsuario
+                                        AND o.Vencimento >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
+                                        ORDER BY o.OcorrenciaPrioridade_idOcorrenciaPrioridade DESC
                                     ");
 
-                                    foreach($areas as $a){
-                                        $area_id = $a->Area_idArea;
+                                    foreach ($executando as $exx ) {
+                                        ?>
+                                            <li id="ocorrenciaId_<?php echo $exx->idOcorrencia; ?>" data-ocorrenciaId="<?php echo $exx->idOcorrencia; ?>" onclick="ocorrencia_detalhe(<?php echo $exx->idOcorrencia; ?>)" class="draggable ui-state-default projeto-<?php echo $exx->idArea; ?> usuario-<?php echo $exx->usuario_post_id; ?>">
+                                                <div class="col s9">
+                                                    <b><?php echo $exx->Titulo; ?></b>
+                                                </div>
+                                                <div class="col s3">
+                                                    <i class="material-icons right" style="color:<?php echo $prioridadeCor[$exx->OcorrenciaPrioridade_idOcorrenciaPrioridade]; ?>;">label</i>
+                                                </div>
+                                                <div class="col s12"><p></p></div>
+                                                <div class="col s9">
+                                                    <?php echo $exx->Descricao; ?><br>
+                                                    <time > <?php echo date("d/m/Y", strtotime($exx->Vencimento));  ?> </time>
+                                                </div>
+                                                <div class="col s3">
+                                                    <?php
+                                                        $url = get_the_post_thumbnail_url($exx->usuario_post_id, 'thumbnail');
+                                                        if( $url != ''){
+                                                            echo '<img src="'.$url.'" class="responsive-img circle">';
+                                                        }else{ echo $exx->Login; }
+                                                    ?>
 
-                                        // Loop para organizar ocorrencias
-                                        $tarefas = $wpdb->get_results("
-                                            SELECT o.*, op.Cor
-                                            FROM ocorrencia o, ocorrenciaprioridade op
-                                            WHERE o.Area_idArea = '$area_id'
-                                            AND o.Usuario_idUsuario = '$user_id'
-                                            AND o.OcorrenciaPrioridade_idOcorrenciaPrioridade = op.idOcorrenciaPrioridade
-                                            AND o.Vencimento >= DATE_SUB(CURDATE(), INTERVAL 20 DAY)
-                                        ");
-
-                                        foreach( $tarefas as $t ){
-                                            switch ($t->OcorrenciaStatus_idOcorrenciaStatus) {
-                                                case 1:
-                                                    $executar[] = array(
-                                                        "id" => $t->idOcorrencia,
-                                                        "descricao" => $t->Descricao,
-                                                        "cor" => $t->Cor
-                                                    );
-                                                    break;
-                                                case 2:
-                                                    $executando[] = array(
-                                                        "id" => $t->idOcorrencia,
-                                                        "descricao" => $t->Descricao,
-                                                        "cor" => $t->Cor
-                                                    );
-                                                    break;
-                                                case 3:
-                                                    $executado[] = array(
-                                                        "id" => $t->idOcorrencia,
-                                                        "descricao" => $t->Descricao,
-                                                        "cor" => $t->Cor
-                                                    );
-                                                    break;
-                                            }
-                                        }
-                                    ?>
-                                    <li>
-                                        <div class="collapsible-header">
-                                            <i class="material-icons">swap_vert</i>
-                                            <h5>
-                                                <?php
-                                                    $cont = count($executar);
-                                                    if( $cont > 0 ){ $esconde = ""; }else{ $esconde = "hide"; }
-                                                ?>
-                                                <span class="badge black white-text <?php echo $esconde; ?>" id="badge_<?php echo $area_id; ?>"> + <b><?php echo $cont; ?></b> Oc. </span>
-                                                <?php echo $a->Descricao; ?>
-                                            </h5>
-                                        </div>
-                                        <div class="collapsible-body area_<?php echo $area_id; ?>">
-                                            <div class="col s12">
-                                                <div class="col s12 m4 bordered no-margin no-padding">
-                                                    <ul class="sortable l100 connectedSortable" data-areaStatus="1" id="executar_<?php echo $area_id; ?>">
-                                                        <?php
-                                                            foreach ($executar as $i => $e) {
-                                                                ?>
-                                                                <li id="ocorrenciaId_<?php echo $e['id']; ?>" data-ocorrenciaId="<?php echo $e['id']; ?>" onclick="ocorrencia_detalhe(<?php echo $e['id']; ?>)" style="background:<?php echo $e['cor']; ?>;" class="draggable ui-state-default"><?php echo $e['descricao']; ?></li>
-                                                                <?php
-                                                            }
-                                                        ?>
-                                                    </ul>
                                                 </div>
-                                                <div class="col s12 m4 bordered no-margin no-padding">
-                                                    <ul class="sortable l100 limite-1 connectedSortable" data-areaStatus="2" id="executando_<?php echo $area_id; ?>">
-                                                        <?php
-                                                            foreach ($executando as $i => $e) {
-                                                                ?>
-                                                                <li id="ocorrenciaId_<?php echo $e['id']; ?>" data-ocorrenciaId="<?php echo $e['id']; ?>" onclick="ocorrencia_detalhe(<?php echo $e['id']; ?>)" style="background:<?php echo $e['cor']; ?>;" class="draggable ui-state-default"><?php echo $e['descricao']; ?></li>
-                                                                <?php
-                                                            }
-                                                        ?>
-                                                    </ul>
-                                                </div>
-                                                <div class="col s12 m4 bordered no-margin no-padding">
-                                                    <ul class="sortable l100 connectedSortable" data-areaStatus="3" id="executado_<?php echo $area_id; ?>">
-                                                        <?php
-                                                            foreach ($executado as $i => $e) {
-                                                                ?>
-                                                                <li id="ocorrenciaId_<?php echo $e['id']; ?>" data-ocorrenciaId="<?php echo $e['id']; ?>" onclick="ocorrencia_detalhe(<?php echo $e['id']; ?>)" style="background:<?php echo $e['cor']; ?>;" class="draggable ui-state-default"><?php echo $e['descricao']; ?></li>
-                                                                <?php
-                                                            }
-                                                        ?>
-                                                    </ul>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </li>
-                                <?php
-                                        $executando = array();
-                                        $executado = array();
-                                        $executar = array();
+                                            </li>
+                                        <?php
                                     }
                                 ?>
-                        </ul>
-                    </div>
+                            </ul>
+                        </div>
+                        <div class="col s12 m3 bordered no-margin no-padding container-sortable">
+                            <ul class="sortable l100 connectedSortable" data-areaStatus="3" id="executado_<?php echo $area_id; ?>">
+                                <?php
+                                    $avaliacao = $wpdb->get_results("
+                                        SELECT o.idOcorrencia, o.Descricao as Titulo, o.Vencimento, o.OcorrenciaPrioridade_idOcorrenciaPrioridade, a.*, u.idUsuario, u.Login, u.post_id as usuario_post_id, u.cor as usuario_cor
+                                        FROM ocorrencia o, area a, usuario u
+                                        WHERE o.Area_idArea = a.idArea
+                                        AND a.empresa_id = $empresa_id
+                                        AND o.OcorrenciaStatus_idOcorrenciaStatus = 3
+                                        AND o.Usuario_idUsuario = u.idUsuario
+                                        AND o.Vencimento >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
+                                        ORDER BY o.OcorrenciaPrioridade_idOcorrenciaPrioridade DESC
+                                    ");
+
+                                    foreach ($avaliacao as $a ) {
+                                        ?>
+                                            <li id="ocorrenciaId_<?php echo $a->idOcorrencia; ?>" data-ocorrenciaId="<?php echo $a->idOcorrencia; ?>" onclick="ocorrencia_detalhe(<?php echo $a->idOcorrencia; ?>)" class="draggable ui-state-default projeto-<?php echo $a->idArea; ?> usuario-<?php echo $a->usuario_post_id; ?>">
+                                                <div class="col s9">
+                                                    <b><?php echo $a->Titulo; ?></b>
+                                                </div>
+                                                <div class="col s3">
+                                                    <i class="material-icons right" style="color:<?php echo $prioridadeCor[$a->OcorrenciaPrioridade_idOcorrenciaPrioridade]; ?>;">label</i>
+                                                </div>
+                                                <div class="col s12"><p></p></div>
+                                                <div class="col s9">
+                                                    <?php echo $a->Descricao; ?><br>
+                                                    <time > <?php echo date("d/m/Y", strtotime($a->Vencimento));  ?> </time>
+                                                </div>
+                                                <div class="col s3">
+                                                    <?php
+                                                        $url = get_the_post_thumbnail_url($a->usuario_post_id, 'thumbnail');
+                                                        if( $url != ''){
+                                                            echo '<img src="'.$url.'" class="responsive-img circle">';
+                                                        }else{ echo $a->Login; }
+                                                    ?>
+
+                                                </div>
+                                            </li>
+                                        <?php
+                                    }
+                                ?>
+                            </ul>
+                        </div>
+                        <div class="col s12 m3 bordered no-margin no-padding container-sortable">
+                            <ul class="sortable l100 connectedSortable" data-areaStatus="4" id="executado_<?php echo $area_id; ?>">
+                                <?php
+                                    $executado = $wpdb->get_results("
+                                        SELECT o.idOcorrencia, o.Descricao as Titulo, o.Vencimento, o.OcorrenciaPrioridade_idOcorrenciaPrioridade, a.*, u.idUsuario, u.Login, u.post_id as usuario_post_id, u.cor as usuario_cor
+                                        FROM ocorrencia o, area a, usuario u
+                                        WHERE o.Area_idArea = a.idArea
+                                        AND a.empresa_id = $empresa_id
+                                        AND o.OcorrenciaStatus_idOcorrenciaStatus = 4
+                                        AND o.Usuario_idUsuario = u.idUsuario
+                                        AND o.Vencimento >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
+                                        ORDER BY o.OcorrenciaPrioridade_idOcorrenciaPrioridade DESC
+                                        LIMIT 30
+                                    ");
+
+                                    foreach ($executado as $exxx ) {
+                                        ?>
+                                            <li id="ocorrenciaId_<?php echo $exxx->idOcorrencia; ?>" data-ocorrenciaId="<?php echo $exxx->idOcorrencia; ?>" onclick="ocorrencia_detalhe(<?php echo $exxx->idOcorrencia; ?>)" class="draggable ui-state-default projeto-<?php echo $a->idArea; ?> usuario-<?php echo $a->usuario_post_id; ?>">
+                                                <div class="col s9">
+                                                    <b><?php echo $exxx->Titulo; ?></b>
+                                                </div>
+                                                <div class="col s3">
+                                                    <i class="material-icons right" style="color:<?php echo $prioridadeCor[$exxx->OcorrenciaPrioridade_idOcorrenciaPrioridade]; ?>;">label</i>
+                                                </div>
+                                                <div class="col s12"><p></p></div>
+                                                <div class="col s9">
+                                                    <?php echo $exxx->Descricao; ?><br>
+                                                    <time > <?php echo date("d/m/Y", strtotime($exxx->Vencimento));  ?> </time>
+                                                </div>
+                                                <div class="col s3">
+                                                    <?php
+                                                        $url = get_the_post_thumbnail_url($exxx->usuario_post_id, 'thumbnail');
+                                                        if( $url != ''){
+                                                            echo '<img src="'.$url.'" class="responsive-img circle">';
+                                                        }else{ echo $exxx->Login; }
+                                                    ?>
+
+                                                </div>
+                                            </li>
+                                        <?php
+                                    }
+                                ?>
+                            </ul>
+                        </div>
+
                         <input type="hidden" name="contador_tarefas" id="contador_tarefas" value="4">
                     </div>
                 </div>
@@ -291,7 +388,9 @@
 
                 </div>
             </div>
+        </div>
 
+        <!-- MODAL ESTA FORA DO page-dashboard -->
         <div id="modal_tarefa_detalhes" class="modal">
             <div class="modal-content" style="padding-bottom:0 ;">
                  <div class="row center">
@@ -329,7 +428,7 @@
                     <div class="input-field col s12 m5">
                         <select class="browser-default" name="mtd_area" id="mtd_area">
                             <?php
-                                $areas = $wpdb->get_results("SELECT * FROM area");
+                                $areas = $wpdb->get_results("SELECT * FROM area WHERE empresa_id = $empresa_id ");
                                 foreach( $areas as $a ){
                             ?>
                                 <option value="<?php echo $a->idArea; ?>"><?php echo $a->Descricao; ?> </option>
@@ -347,7 +446,6 @@
                 <div class="row" id="container_img"></div>
             </div>
         </div>
-
         <?php
             get_footer();
         ?>
