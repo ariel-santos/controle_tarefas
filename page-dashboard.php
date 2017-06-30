@@ -8,8 +8,8 @@
         exit;
     }
     $empresa_id = $wpdb->get_var("SELECT empresa_id FROM usuario WHERE post_id = ". $_COOKIE['id']);
-    $projetos_cores = $wpdb->get_results("SELECT idArea, cor FROM area WHERE empresa_id = $empresa_id ");
-    $pessoas_cores = $wpdb->get_results("SELECT post_id, cor FROM usuario WHERE empresa_id = $empresa_id ");
+    $projetos_cores = $wpdb->get_results("SELECT idArea, cor, Descricao FROM area WHERE empresa_id = $empresa_id ");
+    $pessoas_cores = $wpdb->get_results("SELECT post_id, cor, Login FROM usuario WHERE empresa_id = $empresa_id ");
 ?>
 <html>
     <head>
@@ -155,7 +155,7 @@
                 }else{
                     jQuery(".btn-projeto").addClass("btn-ativo").removeClass("btn-inativo");
                     jQuery(".btn-pessoa").removeClass("btn-ativo").addClass("btn-inativo");
-                    console.log(<?php echo json_encode($projetos_cores); ?>);
+                    // console.log(<?php echo json_encode($projetos_cores); ?>);
                     jQuery.each( <?php echo json_encode($projetos_cores); ?>, function(index, value){
                         console.log(value.idArea + "-" + value.cor);
                         jQuery("li.projeto-"+value.idArea).css("background", value.cor );
@@ -170,15 +170,48 @@
         <div class="row">
             <div class="col s12">
                 <div class="row" id="page-dashboard">
-                    <div class="col s12">
-                        <div class="col s6 m3">
-                            <h4 class="right">Visualizar por:</h4>
+                    <div class="col s12 m10 offset-m1">
+                        <div class="col s12">
+                            <h4>Filtros: </h4>
                         </div>
-                        <div class="col s6">
-                            <p>
-                            <a href="#!" class="btn btn-ativo btn-projeto" onclick="projeto_visualizacao('projeto')">Projetos</a>
-                            <a href="#!" class="btn btn-inativo btn-pessoa" onclick="projeto_visualizacao('pessoa')">Pessoas</a>
-                            </p>
+                        <div class="col s12">
+                            <div class="col s6 m3 l1">
+                                <h5 >Projeto:</h5>
+                            </div>
+                            <div class="col s3 l2">
+                                <select name="filtro_projeto">
+                                    <option value="0">Todos </option>
+                                    <?php
+                                        foreach($projetos_cores as $pa){
+                                            echo '<option value="'.$pa->idArea.'">'.$pa->Descricao.'</option>';
+                                        }
+                                    ?>
+                                </select>
+                            </div>
+                            <div class="col s6 m3 l1">
+                                <h5 >Pessoa:</h5>
+                            </div>
+                            <div class="col s3 m3 l2">
+                                <select name="filtro_pessoa">
+                                    <option value="0">Todos </option>
+                                    <?php
+                                        foreach($pessoas_cores as $pc){
+                                            echo '<option value="'.$pc->post_id.'">'.$pc->Login.'</option>';
+                                        }
+                                    ?>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col s12">
+                            <div class="col s6 m3 l2">
+                                <h5>Visualizar por:</h5>
+                            </div>
+                            <div class="col s6">
+                                <p>
+                                <a href="#!" class="btn btn-ativo btn-projeto" onclick="projeto_visualizacao('projeto')">Projetos</a>
+                                <a href="#!" class="btn btn-inativo btn-pessoa" onclick="projeto_visualizacao('pessoa')">Pessoas</a>
+                                </p>
+                            </div>
                         </div>
                     </div>
                     <div class="col s12 m10 offset-m1 black center white-text">
@@ -193,7 +226,7 @@
                             <ul class="sortable l100 connectedSortable" data-areaStatus="1" id="executar_<?php echo $area_id; ?>">
                             <?php
                                 //Definindo cores para prioridade
-                                $prioridadeCor = array('#000','#01579b','#1b5e20','#d32f2f');
+                                $prioridadeCor = array('#000','#00ff00','#ffff00','#ff0000');
                                 // Busca de todas as tarefas com status 1
                                 $executar = $wpdb->get_results("
                                     SELECT o.idOcorrencia, o.Descricao as Titulo, o.Vencimento, o.OcorrenciaPrioridade_idOcorrenciaPrioridade, a.*, u.idUsuario, u.Login, u.post_id as usuario_post_id, u.cor as usuario_cor
@@ -338,7 +371,7 @@
 
                                     foreach ($executado as $exxx ) {
                                         ?>
-                                            <li id="ocorrenciaId_<?php echo $exxx->idOcorrencia; ?>" data-ocorrenciaId="<?php echo $exxx->idOcorrencia; ?>" onclick="ocorrencia_detalhe(<?php echo $exxx->idOcorrencia; ?>)" class="draggable ui-state-default projeto-<?php echo $a->idArea; ?> usuario-<?php echo $a->usuario_post_id; ?>">
+                                            <li id="ocorrenciaId_<?php echo $exxx->idOcorrencia; ?>" data-ocorrenciaId="<?php echo $exxx->idOcorrencia; ?>" onclick="ocorrencia_detalhe(<?php echo $exxx->idOcorrencia; ?>)" class="draggable ui-state-default projeto-<?php echo $exxx->idArea; ?> usuario-<?php echo $exxx->usuario_post_id; ?>">
                                                 <div class="col s9">
                                                     <b><?php echo $exxx->Titulo; ?></b>
                                                 </div>
@@ -419,9 +452,9 @@
                     </div>
                     <div class="input-field col s12 m3">
                         <select class="browser-default" name="mtd_prioridade" id="mtd_prioridade">
-                            <option value="2">Normal</option>
-                            <option value="3">Alta</option>
-                            <option value="1">Baixa</option>
+                            <option value="1">Normal</option>
+                            <option value="2">Importante</option>
+                            <option value="3">Urgente</option>
                         </select>
                         <label for="prioridade">Prioridade</label>
                     </div>
