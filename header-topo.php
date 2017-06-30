@@ -24,6 +24,9 @@
     </div>
     <div class="col s12 m4">
             <script>
+                function sair(){
+                    location.href = '/';
+                }
                 function add_projeto(){
                     descricao = jQuery("input#descricao").val();
                     jQuery.post("<?php echo get_template_directory_uri();?>/bd/cadastra_projeto.php", {descricao: descricao}, function(data){
@@ -36,7 +39,6 @@
                         }
                     }, "json");
                 }
-
 
                 function abrir_media(){
                     var custom_uploader;
@@ -105,6 +107,7 @@
                         <h4 class="no-margin" style="margin:0;">Cadastro de Ocorrencia</h4>
                         <span id="resposta"></span>
                         <form name="fm_add_tarefa" id="fm_add_tarefa" method="post" enctype="multipart/form-data">
+                            <input type="hidden" name="responsavel_id" value="<?php echo $_COOKIE['id']; ?>">
                             <div class="row">
                                 <div class="input-field col s12">
                                     <input id="descricao" name="descricao" type="text">
@@ -119,9 +122,9 @@
                                 <div class="row">
                                     <div class="input-field col s12 m3">
                                         <select name="prioridade" id="prioridade">
-                                            <option value="2">Normal</option>
-                                            <option value="3">Alta</option>
-                                            <option value="1">Baixa</option>
+                                            <option value="1">Normal</option>
+                                            <option value="2">Importante</option>
+                                            <option value="3">Urgente</option>
                                         </select>
                                         <label for="prioridade">Prioridade</label>
                                     </div>
@@ -141,15 +144,15 @@
                                     <div class="input-field col s12 m4">
                                         <select name="id_user" id="id_user">
                                             <?php
-                                                $users = $wpdb->get_results("SELECT * FROM usuario WHERE empresa_id = $empresa_id");
+                                                $users = $wpdb->get_results("SELECT * FROM usuario WHERE empresa_id = $empresa_id AND ativo = 1");
                                                 foreach( $users as $u ){
                                             ?>
-                                                <option value="<?php echo $u->idUsuario; ?>"><?php echo $u->Nome; ?> </option>
+                                                <option value="<?php echo $u->idUsuario; ?>"><?php echo $u->Login; ?> </option>
                                             <?php
                                                 }
                                             ?>
                                         </select>
-                                        <label for="id_user">Usuario</label>
+                                        <label for="id_user">Usuario/Operacional</label>
                                     </div>
                                 </div>
                                 <div class="row">
