@@ -1,5 +1,5 @@
 <?php
-    define('WP_USE_THEMES', false); 
+    define('WP_USE_THEMES', false);
     $parse_uri = explode( 'wp-content', $_SERVER['SCRIPT_FILENAME'] );
     require_once( $parse_uri[0] . 'wp-load.php' );
     if ( ! function_exists( 'wp_handle_upload' ) ) {
@@ -16,6 +16,7 @@
     $vencimento = $_REQUEST['vencimento'];
     $prioridade = $_REQUEST['prioridade'];
     $projeto = $_REQUEST['area'];
+    $responsavel_id = $_REQUEST['responsavel_id'];
 
     $files = $_FILES['file'];
     $upload_overrides = array( 'test_form' => false );
@@ -30,7 +31,8 @@
             'OcorrenciaPrioridade_idOcorrenciaPrioridade' => $prioridade,
             'OcorrenciaStatus_idOcorrenciaStatus' => '1',
             'Area_idArea' => $projeto,
-            'Usuario_idUsuario' => $user_id
+            'Usuario_idUsuario' => $user_id,
+            'Responsavel_id' => $responsavel_id
         )
     );
 
@@ -66,7 +68,7 @@
             "cod" => 0,
             "msg" => "Tarefa cadastrada com sucesso !",
             "resposta-wp" => $resposta_wp
-        );    
+        );
     }else{
         $resposta = array(
             "cod" => 1,

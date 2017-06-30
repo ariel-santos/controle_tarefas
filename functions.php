@@ -306,39 +306,65 @@ function colaborador_html($post){
 		</script>
 		<div class="wrap">
 			<div class="row">
-				<div class="input-field col s2">
-					<select name="ativo" id="ativo">
-						<option value="0" <?php selected( $usuario->ativo, 0 );  ?>>Não</option>
-				      	<option value="1" <?php selected( $usuario->ativo, 1 );  ?>>Sim</option>
-				    </select>
-					<label>Ativo</label>
+				<div class="col s12">
+					<div class="input-field col s2">
+						<select name="ativo" id="ativo">
+							<option value="0" <?php selected( $usuario->ativo, 0 );  ?>>Não</option>
+					      	<option value="1" <?php selected( $usuario->ativo, 1 );  ?>>Sim</option>
+					    </select>
+						<label>Ativo</label>
+					</div>
+					<div class="input-field col s6">
+			          	<input type="text" id="empresa" name="empresa" class="empresa_autocomplete" placeholder="Pesquisar pela empresa " value="<?php echo $minha_empresa; ?>">
+			          	<label for="empresa">Empresa</label>
+			        </div>
+					<div class="input-field col s4">
+			          	<input id="login" name="login" type="text" value="<?php echo $usuario->Login; ?>">
+			          	<label for="login">Login</label>
+			        </div>
+					<div class="input-field col s12">
+			          	<input id="email" name="email" type="text" value="<?php echo $usuario->email; ?>">
+			          	<label for="email">Email</label>
+			        </div>
+					<div class="input-field col s4">
+			          	<input id="senha" name="senha" type="text" placeholder="sua senha sera criptografada ">
+			          	<label for="senha">Senha</label>
+			        </div>
+					<div class="input-field col s6">
+						<input id="cor" name="cor" type="text" value="<?php echo $usuario_cor; ?>">
+						<label for="cor">COLABORADOR</label>
+					</div>
 				</div>
-				<div class="input-field col s6">
-		          	<input type="text" id="empresa" name="empresa" class="empresa_autocomplete" placeholder="Pesquisar pela empresa " value="<?php echo $minha_empresa; ?>">
-		          	<label for="empresa">Empresa</label>
-		        </div>
-				<div class="input-field col s4">
-		          	<input id="login" name="login" type="text" value="<?php echo $usuario->Login; ?>">
-		          	<label for="login">Login</label>
-		        </div>
-
-				<div class="input-field col s4">
-					<input id="cor" name="cor" type="text" value="<?php echo $usuario_cor; ?>">
-					<label for="cor">COLABORADOR</label>
+				<div class="col s12">
+					<br>
+					<h5>Permissão para visualizar projetos </h5>
+					<div class="col s12">
+						<p>
+						<a href="#!" class="btn black">Selecionar todos</a>
+						<a href="#!" class="btn black">Desselecionar todos</a>
+						</p>
+					</div>
+					<div class="col s12 ">
+						<p></p>
+						<?php
+							$projetos = $wpdb->get_results("SELECT * FROM area ");
+							foreach( $projetos as $p ){
+								?>
+									<p class="col s3">
+								      	<input type="checkbox" id="projeto_id-<?php echo $p->idArea; ?>" name="projeto_id[]" value="<?php echo $p->idArea; ?>" checked="checked" class="black">
+								      	<label for="projeto_id-<?php echo $p->idArea; ?>" ><?php echo $p->Descricao; ?></label>
+								    </p>
+								<?php
+							}
+						?>
+					</div>
 				</div>
-
-				<div class="input-field col s4">
-		          	<input id="email" name="email" type="text" value="<?php echo $usuario->email; ?>">
-		          	<label for="email">Email</label>
-		        </div>
-				<div class="input-field col s4">
-		          	<input id="senha" name="senha" type="text" placeholder="sua senha sera criptografada ">
-		          	<label for="senha">Senha</label>
-		        </div>
-
 			</div>
-			<div class="col s12">
+			<div class="col s6">
 				<div id="picker"></div>
+			</div>
+			<div class="col s6">
+				<h2>Selecione os projetos que esta pessoa visualiza </h2>
 			</div>
 		</div>
 	<?php
